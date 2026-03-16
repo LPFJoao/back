@@ -11,7 +11,9 @@ function getUsers(req, res) {
 
 // Création
 function createUser(req, res) {
-  console.log(req);
+  console.log("POST /auth/register");
+  console.log("body:", req.body);
+  console.log("origin:", req.headers.origin);
 
   if (!req.body) {
     return res.status(400).json({ error: "Données manquantes" });
@@ -23,18 +25,26 @@ if (!first_name || !last_name || !email || !password ) {
   return res.status(400).json({ error: "Tous les champs sont requis" });
 }
 
+console.log("2. validation passed");
+
 // Vérifie si email déjà utilisé
 User.findOne({ where: { email } }).then(async (existingEmail) => {
+  console.log("3. existing user check done");
   if (existingEmail) {
+    console.log("4. user already exists");
     return res.status(400).json({ error: "Email déjà utilisé" });
   }
 
   const hash = await hashPassword(password);
+  console.log("5. password hashed");
+  console.log("Before DB create");
   User.create({ first_name, last_name, email, password: hash, role: role || "PRODUCER" })
       .then((newUser) => {
         const { password, ...safeUser } = newUser.dataValues;
         res.status(201).json({ message: "Utilisateur créé", newUser: safeUser });
+        console.log("After DB create", newUser.id);
       });
+  
 });
 }
 
